@@ -205,6 +205,8 @@ tr:hover td{background:rgba(255,255,255,.03)}
 .modal-foto img{width:100%;height:100%;object-fit:cover}
 .modal-top{display:flex;gap:16px;align-items:flex-start;margin-bottom:16px}
 .modal-top-info{flex:1}
+.tarja-dado{display:inline-block;width:96px;max-width:100%;height:13px;border-radius:3px;background:repeating-linear-gradient(135deg,#3a3f4d,#3a3f4d 4px,#1a1c23 4px,#1a1c23 8px);vertical-align:middle;cursor:help}
+.tarja-dado.wide{width:180px}
 </style>
 	</head>
 	<body class="locked">
@@ -257,7 +259,6 @@ tr:hover td{background:rgba(255,255,255,.03)}
 <nav>
   <button class="active" onclick="showP('pg',this)">📊 Geral</button>
   <button onclick="showP('pb',this)">🔍 Busca</button>
-  <button onclick="showP('pcivis',this)">👥 Civis</button>
   <button onclick="showP('pc',this)">🎓 Cursos</button>
   <button onclick="showP('pe',this)">📋 EAP</button>
   <button onclick="showP('pbd',this)">🎂 Aniversários</button>
@@ -367,17 +368,6 @@ tr:hover td{background:rgba(255,255,255,.03)}
   <div class="tw"><table><thead><tr><th style="width:44px">Foto</th><th>#</th><th>Nome</th><th>E.B.</th><th>Prontidão</th><th>RE</th><th>Endereço</th><th>Férias 1ª Q.</th><th>Férias 2ª Q.</th><th>Val. IAS</th><th>EAP 2026</th><th>Cursos</th></tr></thead><tbody id="stb"></tbody></table></div>
 </div>
 
-<!-- PAINEL CIVIS -->
-<div class="panel" id="pcivis">
-  <div class="sbar">
-    <input type="text" id="si-civis" placeholder="🔍  Nome, CPF, função..." oninput="rSearchCivis()">
-    <select id="grupo-civis" onchange="rSearchCivis()"><option value="">Todas as Instituições</option></select>
-  </div>
-
-  <div class="rc" id="sc-civis"></div>
-  <div class="tw"><table><thead><tr><th style="width:44px">Foto</th><th>Nome</th><th>CPF</th><th>Função</th><th>Instituição</th><th>Telefone</th><th>Aniversário</th><th>Endereço</th></tr></thead><tbody id="stb-civis"></tbody></table></div>
-</div>
-
 <!-- PAINEL CURSOS -->
 <div class="panel" id="pc">
   <div class="srow" id="csr"></div>
@@ -399,8 +389,8 @@ tr:hover td{background:rgba(255,255,255,.03)}
 <!-- PAINEL CNH -->
 <div class="panel" id="pcnh">
   <div class="alert-grid" id="cnh-stats"></div>
-  <div class="sec-title" style="margin-top:4px">🪪 Filtrar CNH por prazo de vencimento</div>
-  <div class="frow" style="margin-bottom:16px">
+  <div class="sec-title" style="margin-top:4px">🪪 Relação completa do efetivo — Status da CNH</div>
+  <div class="frow" style="margin-bottom:16px;display:none">
     <select id="cnh-filter" onchange="rCNH()">
       <option value="12">⚠️ Vencendo em até 12 meses</option>
       <option value="6">🔴 Vencendo em até 6 meses</option>
@@ -422,8 +412,8 @@ tr:hover td{background:rgba(255,255,255,.03)}
 <!-- PAINEL TOXICOLÓGICO -->
 <div class="panel" id="ptox">
   <div class="alert-grid" id="tox-stats"></div>
-  <div class="sec-title" style="margin-top:4px">🧪 Filtrar Exame Toxicológico por prazo de vencimento</div>
-  <div class="frow" style="margin-bottom:16px">
+  <div class="sec-title" style="margin-top:4px">🧪 Relação completa do efetivo — Status do Toxicológico</div>
+  <div class="frow" style="margin-bottom:16px;display:none">
     <select id="tox-filter" onchange="rTox()">
       <option value="12">⚠️ Vencendo em até 12 meses</option>
       <option value="6">🔴 Vencendo em até 6 meses</option>
@@ -444,8 +434,8 @@ tr:hover td{background:rgba(255,255,255,.03)}
 <!-- PAINEL IAS VENCIDAS -->
 <div class="panel" id="pias">
   <div class="alert-grid" id="ias-stats"></div>
-  <div class="sec-title" style="margin-top:4px">⚠️ Relatório de IAS — filtrar por situação</div>
-  <div class="frow" style="margin-bottom:16px">
+  <div class="sec-title" style="margin-top:4px">⚠️ Relação completa do efetivo — Status da IAS</div>
+  <div class="frow" style="margin-bottom:16px;display:none">
     <select id="ias-filter" onchange="rIAS()">
       <option value="venc">🔴 Apenas Vencidas</option>
       <option value="3">🚨 Vencendo em até 3 meses</option>
@@ -884,7 +874,7 @@ async function fetchSheets(){
   QSE={...DEFAULT_QSE,...(c.qse||QSE||{})};
   const btn=document.getElementById('btnr');
   btn.disabled=true;btn.classList.add('loading');
-  fetchCivis(); // Busca civis em paralelo (antes só rodava a função, nunca era chamada)
+  // fetchCivis(); // Aba Civis removida — dados de civis não são mais carregados
   try{
     toast('⏳ Buscando dados da planilha...','inf');
     const text=await fetchWithProxy(url);
@@ -1182,20 +1172,37 @@ function rebuildAll(){
   prs.forEach(e=>{const o=document.createElement('option');o.value=e;o.textContent=e;pr.appendChild(o);});
   buildIASFilters();buildCarimboFilters();
   updQPO();buildStats();buildCharts();refreshQSEPanel();buildQSEAnalysis();buildMinimoOperacional();
-  rSearch();buildCursos();buildEAP();buildBday();rCNH();rTox();rIAS();buildFerias();rCarimbo();buildMat();buildEtiqFilters();rEtiq();
+  rSearch();buildCursos();buildEAP();populateMesSel();buildBday();rCNH();rTox();rIAS();buildFerias();rCarimbo();buildMat();buildEtiqFilters();rEtiq();
 }
 
 // ── QPO ──────────────────────────────────────────────────────────────────────
+// Quando um SubTen/Sgt está logado, todo indicador de quadro/déficit deve
+// comparar o efetivo da EB dele apenas com o mínimo daquela EB — nunca com
+// o total do 1º SGB, que ele não enxerga mais (DATA já vem filtrada por EB).
+function escopoQSE(){
+  const full=(window.__sgb_cfg&&window.__sgb_cfg.qse)?window.__sgb_cfg.qse:(QSE||DEFAULT_QSE);
+  if(SGB_USER && SGB_USER.tipo==='SGT'){
+    const o={};o[SGB_USER.eb]=full[SGB_USER.eb]||0;return o;
+  }
+  return full;
+}
+function qpoEfetivo(){
+  if(SGB_USER && SGB_USER.tipo==='SGT'){
+    return Object.values(escopoQSE()).reduce((a,b)=>a+(parseInt(b)||0),0);
+  }
+  return QPO;
+}
 function updQPO(){
-  const ef=DATA.length,def=QPO-ef,pct=((ef/QPO)*100).toFixed(1),dp=((def/QPO)*100).toFixed(1);
-  ['h-qpo','q-qpo'].forEach(id=>document.getElementById(id).textContent=QPO);
+  const qpoAtual=qpoEfetivo();
+  const ef=DATA.length,def=qpoAtual-ef,pct=qpoAtual?((ef/qpoAtual)*100).toFixed(1):'0.0',dp=qpoAtual?((def/qpoAtual)*100).toFixed(1):'0.0';
+  ['h-qpo','q-qpo'].forEach(id=>document.getElementById(id).textContent=qpoAtual);
   ['h-ef','q-ef'].forEach(id=>document.getElementById(id).textContent=ef);
   ['h-def','q-def'].forEach(id=>document.getElementById(id).textContent='−'+def);
   document.getElementById('q-defpct').textContent=dp+'% do QPO';
   document.getElementById('q-cob').textContent=pct+'%';
   document.getElementById('q-prog').style.width=Math.min(pct,100)+'%';
   document.getElementById('q-pl').textContent='Efetivo atual: '+ef;
-  document.getElementById('q-pr').textContent='QPO: '+QPO;
+  document.getElementById('q-pr').textContent='QPO: '+qpoAtual;
 }
 
 // ── STATS ────────────────────────────────────────────────────────────────────
@@ -1373,19 +1380,21 @@ function gradColorPair(nome){const bg=gradColorValue(nome);return {bg:bg,fg:grad
 
 function calcQSEStats(){
   const ativosQSE = DATA.filter(d=>!isAfastado(d));
+  const escopo = escopoQSE();
   const porEb={};
-  Object.keys(QSE||DEFAULT_QSE).forEach(k=>porEb[k]=0);
+  Object.keys(escopo).forEach(k=>porEb[k]=0);
   ativosQSE.forEach(d=>{ if(d.eb){ porEb[d.eb]=(porEb[d.eb]||0)+1; } });
-  const totalMin = Object.values(QSE||DEFAULT_QSE).reduce((a,b)=>a+(parseInt(b)||0),0);
-  const totalAtual = Object.keys(QSE||DEFAULT_QSE).reduce((s,k)=>s+(porEb[k]||0),0);
+  const totalMin = Object.values(escopo).reduce((a,b)=>a+(parseInt(b)||0),0);
+  const totalAtual = Object.keys(escopo).reduce((s,k)=>s+(porEb[k]||0),0);
   return {porEb,totalMin,totalAtual,deficit:Math.max(0,totalMin-totalAtual)};
 }
 function refreshQSEPanel(){
   // Quadro QSE Atual removido conforme solicitado
 }
 function buildMinimoOperacional(){
-  // Calcula o total do Mínimo Operacional (somatório de todas as EBs configuradas)
-  const qse=window.__sgb_cfg&&window.__sgb_cfg.qse?window.__sgb_cfg.qse:QSE;
+  // Mínimo Operacional: soma apenas das E.B. visíveis na sessão atual
+  // (uma única E.B. quando é um SubTen/Sgt logado; todas quando é ADM).
+  const qse=escopoQSE();
   const totalMin=Object.values(qse).reduce((a,b)=>a+(parseInt(b)||0),0);
   
   // Conta os afastados (prontidao === 'AFASTADO')
@@ -1453,8 +1462,9 @@ function buildQSEAnalysis(){
   const stats=document.getElementById('qse-def-stats');
   if(!list) return;
   list.innerHTML='';
-  const entries=Object.keys(QSE||DEFAULT_QSE).map(eb=>{
-    const min=parseInt((QSE||DEFAULT_QSE)[eb])||0;
+  const escopo=escopoQSE();
+  const entries=Object.keys(escopo).map(eb=>{
+    const min=parseInt(escopo[eb])||0;
     const atual=s.porEb[eb]||0;
     const deficit=Math.max(0,min-atual);
     const sobra=Math.max(0,atual-min);
@@ -1627,11 +1637,7 @@ function printFeriasEB(){
 }
 // ── CNH ──────────────────────────────────────────────────────────────────────
 function rCNH(){
-  const filterValue=document.getElementById('cnh-filter').value;
-  const filterMonths=parseInt(filterValue,10);
-  const eb=document.getElementById('cnh-eb').value;
-  let all=DATA.slice();
-  if(eb)all=all.filter(d=>d.eb===eb);
+  const all=DATA.slice();
   const base=all.filter(d=>d.cnh_val);
   const sem=all.filter(d=>!d.cnh_val);
   const vencidos=base.filter(d=>monthsUntil(d.cnh_val)<0).length;
@@ -1646,19 +1652,16 @@ function rCNH(){
     <div class="alert-card warn"><div class="alert-num" style="color:#FCD34D">${ate12}</div><div class="alert-lbl">Vencem em 6 a 12 meses</div></div>
     <div class="alert-card ok"><div class="alert-num" style="color:var(--g)">${ok}</div><div class="alert-lbl">Válidas &gt; 12 meses</div></div>
     <div class="alert-card"><div class="alert-num" style="color:var(--m)">${sem.length}</div><div class="alert-lbl">Sem CNH registrada</div></div>`;
-  let res=base;
-  if(filterValue==='sem')res=sem;
-  else if(filterMonths===0){/* show all */}
-  else res=base.filter(d=>{const m=monthsUntil(d.cnh_val);return m!==null&&m<=filterMonths;});
-  res.sort((a,b)=>{
-    if(filterValue==='sem')return (a.nome||'').localeCompare(b.nome||'','pt-BR');
-    return (monthsUntil(a.cnh_val)||999)-(monthsUntil(b.cnh_val)||999);
+  const res=all.slice().sort((a,b)=>{
+    const ma=a.cnh_val?monthsUntil(a.cnh_val):999999;
+    const mb=b.cnh_val?monthsUntil(b.cnh_val):999999;
+    return ma-mb;
   });
-  document.getElementById('cnh-rc').textContent=res.length+' militar(es) no filtro selecionado';
+  document.getElementById('cnh-rc').textContent=res.length+' militar(es) no efetivo';
   const tb=document.getElementById('cnh-tb');tb.innerHTML='';
-  if(!res.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ei">🪪</div>Nenhum registro no filtro selecionado.</div></td></tr>`;return;}
+  if(!res.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ei">🪪</div>Nenhum militar no efetivo.</div></td></tr>`;return;}
   res.forEach(d=>{
-    const semCnh=filterValue==='sem'||!d.cnh_val;
+    const semCnh=!d.cnh_val;
     const st=semCnh?{cls:'badge bwarn',label:'Sem CNH registrada'}:statusDoc(d.cnh_val);
     tb.innerHTML+=`<tr onclick="openM('${d.id}')" style="cursor:pointer">
       <td style="font-weight:500">${d.nome}</td>
@@ -1672,15 +1675,12 @@ function rCNH(){
   });
 }
 
+
+// ── TOXICOLÓGICO ─────────────────────────────────────────────────────────────
 // ── TOXICOLÓGICO ─────────────────────────────────────────────────────────────
 function rTox(){
-  const filterMonths=parseInt(document.getElementById('tox-filter').value);
-  const eb=document.getElementById('tox-eb').value;
-  
-  let base=DATA.filter(d=>d.val_tox);
-  if(eb)base=base.filter(d=>d.eb===eb);
-  
-  // Stats
+  const all=DATA.slice();
+  const base=all.filter(d=>d.val_tox);
   const vencidos=base.filter(d=>monthsUntil(d.val_tox)<0).length;
   const ate3=base.filter(d=>{const m=monthsUntil(d.val_tox);return m>=0&&m<=3;}).length;
   const ate6=base.filter(d=>{const m=monthsUntil(d.val_tox);return m>3&&m<=6;}).length;
@@ -1692,17 +1692,18 @@ function rTox(){
     <div class="alert-card warn"><div class="alert-num" style="color:var(--y)">${ate6}</div><div class="alert-lbl">Vencem em 3 a 6 meses</div></div>
     <div class="alert-card warn"><div class="alert-num" style="color:#FCD34D">${ate12}</div><div class="alert-lbl">Vencem em 6 a 12 meses</div></div>
     <div class="alert-card ok"><div class="alert-num" style="color:var(--g)">${ok}</div><div class="alert-lbl">Válidos &gt; 12 meses</div></div>
-    <div class="alert-card"><div class="alert-num" style="color:var(--m)">${DATA.length-base.length}</div><div class="alert-lbl">Sem exame registrado</div></div>`;
-
-  let res=base;
-  if(filterMonths>0)res=base.filter(d=>{const m=monthsUntil(d.val_tox);return m!==null&&m<=filterMonths;});
-  res.sort((a,b)=>(monthsUntil(a.val_tox)||999)-(monthsUntil(b.val_tox)||999));
-  
-  document.getElementById('tox-rc').textContent=res.length+' militar(es) no filtro selecionado';
+    <div class="alert-card"><div class="alert-num" style="color:var(--m)">${all.length-base.length}</div><div class="alert-lbl">Sem exame registrado</div></div>`;
+  const res=all.slice().sort((a,b)=>{
+    const ma=a.val_tox?monthsUntil(a.val_tox):999999;
+    const mb=b.val_tox?monthsUntil(b.val_tox):999999;
+    return ma-mb;
+  });
+  document.getElementById('tox-rc').textContent=res.length+' militar(es) no efetivo';
   const tb=document.getElementById('tox-tb');tb.innerHTML='';
-  if(!res.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="ei">🧪</div>Nenhum registro no período selecionado.</div></td></tr>`;return;}
+  if(!res.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="ei">🧪</div>Nenhum militar no efetivo.</div></td></tr>`;return;}
   res.forEach(d=>{
-    const st=statusDoc(d.val_tox);
+    const semTox=!d.val_tox;
+    const st=semTox?{cls:'badge bwarn',label:'Sem exame registrado'}:statusDoc(d.val_tox);
     tb.innerHTML+=`<tr onclick="openM('${d.id}')" style="cursor:pointer">
       <td style="font-weight:500">${d.nome}</td>
       <td>${d.eb}</td><td>${bp(d.prontidao)}</td>
@@ -1713,6 +1714,7 @@ function rTox(){
     </tr>`;
   });
 }
+
 
 // ── MODAL ────────────────────────────────────────────────────────────────────
 function vIcon(dateStr){
@@ -1893,6 +1895,11 @@ function buildEAP(){
 }
 
 // ── BIRTHDAYS ────────────────────────────────────────────────────────────────
+function populateMesSel(){
+  const el=document.getElementById('msel');
+  if(!el) return;
+  el.innerHTML=MESES.map((m,i)=>`<button class="mb${(i+1)===selMes?' active':''}" onclick="selMes=${i+1};populateMesSel();buildBday();">${m}</button>`).join('');
+}
 function buildBday(){
   const withB=DATA.filter(d=>d.niver);
   const fil=withB.filter(d=>parseInt((d.niver||'').split('/')[1])===selMes).sort((a,b)=>parseInt(a.niver.split('/')[0])-parseInt(b.niver.split('/')[0]));
@@ -1918,14 +1925,9 @@ function buildIASFilters(){
   prs.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;prEl.appendChild(o);});
 }
 function rIAS(){
-  const filt=document.getElementById('ias-filter').value;
-  const eb=document.getElementById('ias-eb').value;
-  const pr=document.getElementById('ias-pr').value;
-  const today=new Date();
-
-  // stats
-  const comIAS=DATA.filter(d=>d.val_ias);
-  const semIAS=DATA.filter(d=>!d.val_ias);
+  const all=DATA.slice();
+  const comIAS=all.filter(d=>d.val_ias);
+  const semIAS=all.filter(d=>!d.val_ias);
   const vencidas=comIAS.filter(d=>monthsUntil(d.val_ias)<0);
   const ate3=comIAS.filter(d=>{const m=monthsUntil(d.val_ias);return m!==null&&m>=0&&m<=3;});
   const ate6=comIAS.filter(d=>{const m=monthsUntil(d.val_ias);return m!==null&&m>3&&m<=6;});
@@ -1938,24 +1940,17 @@ function rIAS(){
     <div class="alert-card ok"><div class="alert-num" style="color:var(--g)">${ok.length}</div><div class="alert-lbl">Válidas &gt; 6 meses</div></div>
     <div class="alert-card"><div class="alert-num" style="color:var(--m)">${semIAS.length}</div><div class="alert-lbl">Sem IAS registrada</div></div>`;
 
-  let res=DATA;
-  if(filt==='venc') res=DATA.filter(d=>d.val_ias&&monthsUntil(d.val_ias)<0);
-  else if(filt==='3') res=DATA.filter(d=>d.val_ias&&monthsUntil(d.val_ias)!==null&&monthsUntil(d.val_ias)<=3);
-  else if(filt==='6') res=DATA.filter(d=>d.val_ias&&monthsUntil(d.val_ias)!==null&&monthsUntil(d.val_ias)<=6);
-  else if(filt==='12') res=DATA.filter(d=>d.val_ias&&monthsUntil(d.val_ias)!==null&&monthsUntil(d.val_ias)<=12);
-  else if(filt==='all') res=DATA.filter(d=>d.val_ias);
-  else if(filt==='sem') res=DATA.filter(d=>!d.val_ias);
+  const res=all.slice().sort((a,b)=>{
+    const ma=a.val_ias?monthsUntil(a.val_ias):999999;
+    const mb=b.val_ias?monthsUntil(b.val_ias):999999;
+    return ma-mb;
+  });
 
-  if(eb) res=res.filter(d=>d.eb===eb);
-  if(pr) res=res.filter(d=>d.prontidao===pr);
-
-  if(filt!=='sem') res.sort((a,b)=>(monthsUntil(a.val_ias)||999)-(monthsUntil(b.val_ias)||999));
-
-  document.getElementById('ias-rc').textContent=res.length+' militar(es) encontrado(s)';
+  document.getElementById('ias-rc').textContent=res.length+' militar(es) no efetivo';
   const tb=document.getElementById('ias-tb');tb.innerHTML='';
-  if(!res.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="ei">⚠️</div>Nenhum registro.</div></td></tr>`;return;}
+  if(!res.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="ei">⚠️</div>Nenhum militar no efetivo.</div></td></tr>`;return;}
   res.forEach(d=>{
-    const ist=statusDoc(d.val_ias);
+    const ist=d.val_ias?statusDoc(d.val_ias):{cls:'badge bwarn',label:'Sem IAS registrada'};
     const days=daysUntil(d.val_ias);
     const daysStr=days===null?'—':days<0?`<span style="color:var(--red);font-weight:700">${Math.abs(days)} dias atrás</span>`:`${days} dias`;
     tb.innerHTML+=`<tr onclick="openM('${d.id}')" style="cursor:pointer">
@@ -1964,10 +1959,11 @@ function rIAS(){
       <td style="color:var(--m);font-size:12px">${d.re}</td>
       <td style="font-weight:600">${d.val_ias||'<span style="color:var(--m)">Não registrada</span>'}</td>
       <td>${daysStr}</td>
-      <td>${d.val_ias?`<span class="${ist.cls}">${ist.label}</span>`:'<span style="color:var(--m);font-size:11px">—</span>'}</td>
+      <td><span class="${ist.cls}">${ist.label}</span></td>
     </tr>`;
   });
 }
+
 
 // ── FÉRIAS POR QUINZENA ───────────────────────────────────────────────────────
 function _ferPopulateEBSel(){
@@ -1997,8 +1993,8 @@ function buildFerias(){
   const grid=document.getElementById('fer-grid');grid.innerHTML='';
   const prc={VERDE:'#27AE60',AZUL:'#2980B9',AMARELA:'#F5A623',ADM:'#8E44AD'};
 
-  // ── MODO LISTA PLANA (quando EB filtrada) ────────────────────────────────────
-  if(ebFil){
+  // ── MODO LISTA PLANA (sempre, conforme solicitado) ───────────────────────────
+  if(true){
     const comFerias=SRC.filter(d=>d.ferias1||d.ferias2).sort((a,b)=>{
       const da=parseDMY(a.ferias1||a.ferias2),db=parseDMY(b.ferias1||b.ferias2);
       if(!da)return 1;if(!db)return -1;return da-db;
@@ -2780,9 +2776,11 @@ function isLogged(){return localStorage.getItem('sgb_logged')==='true';}
 		// usuário logado é SubTen/Sgt. ADM continua vendo tudo, sem embaralhar.
 		function aplicarSessaoDATA(){
 		  if(SGB_USER && SGB_USER.tipo==='SGT'){
+		    const TARJA='<span class="tarja-dado" title="Dado protegido — acesso restrito à própria E.B."></span>';
+		    const TARJA_W='<span class="tarja-dado wide" title="Dado protegido — acesso restrito à própria E.B."></span>';
 		    DATA = DATA_MASTER.filter(d=>d.eb===SGB_USER.eb).map(d=>Object.assign({},d,{
-		      cpf: shuffleStr(d.cpf),
-		      endereco: shuffleStr(d.endereco)
+		      cpf: TARJA,
+		      endereco: TARJA_W
 		    }));
 		  } else {
 		    DATA = DATA_MASTER.slice();
@@ -2825,10 +2823,11 @@ function isLogged(){return localStorage.getItem('sgb_logged')==='true';}
 		    return;
 		  }
 		  const cpfDigits = d => d.cpf ? d.cpf.replace(/\D/g,'') : '';
-		  const isSgtRank = d => /\b(SUBTEN|SGT)\b/i.test(d.nome||'');
 		  const adm = DATA_MASTER.find(d=>d.prontidao==='ADM' && cleanInput && cpfDigits(d)===cleanInput);
-		  const sgt = !adm ? DATA_MASTER.find(d=>isSgtRank(d) && cleanInput && cpfDigits(d)===cleanInput) : null;
-		  const match = adm || sgt;
+		  // Qualquer militar do efetivo (qualquer graduação) pode logar com o próprio CPF;
+		  // fica restrito à própria E.B., igual ao SubTen/Sgt (tipo 'SGT' = acesso restrito por E.B.).
+		  const membro = !adm ? DATA_MASTER.find(d=>cleanInput && cpfDigits(d)===cleanInput) : null;
+		  const match = adm || membro;
 		  if(match){
 		    SGB_USER = adm ? {tipo:'ADM', nome:match.nome, eb:match.eb} : {tipo:'SGT', nome:match.nome, eb:match.eb};
 		    aplicarSessaoDATA();
